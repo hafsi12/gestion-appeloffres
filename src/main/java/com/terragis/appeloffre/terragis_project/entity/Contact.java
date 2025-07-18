@@ -20,6 +20,7 @@ public class Contact {
     private String phone;
 
     @ManyToOne
+    @JoinColumn(name = "client_id") // Ensure this matches the foreign key column name in your DB
     private MaitreOeuvrage client;
 }
 
