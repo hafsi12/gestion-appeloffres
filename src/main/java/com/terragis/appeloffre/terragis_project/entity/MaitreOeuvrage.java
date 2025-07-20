@@ -1,5 +1,6 @@
 package com.terragis.appeloffre.terragis_project.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore; // Import this
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,9 +21,10 @@ public class MaitreOeuvrage {
     private boolean archived;
     private String secteur;
 
-    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true) // Added cascade and orphanRemoval for contacts
+    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Contact> contacts;
 
     @OneToMany(mappedBy = "client")
+    @JsonIgnore // Add this annotation to break the circular reference
     private List<Opportunite> opportunites;
 }

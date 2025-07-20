@@ -31,7 +31,8 @@ public class Opportunite {
     @OneToMany(mappedBy = "opportunite", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DocumentOpportunite> documents;
 
-    @OneToOne(mappedBy = "opportunite", cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "offre_id") // Owning side, foreign key in opportunite table
     private Offre offre;
 
     @Transient
