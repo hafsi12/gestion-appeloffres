@@ -1,5 +1,6 @@
 package com.terragis.appeloffre.terragis_project.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,13 +9,17 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EtatOpportunite {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    @Enumerated(EnumType.STRING)
+    private EtatOpportuniteEnum statut;
+
+    @Column(columnDefinition = "TEXT")
+    private String justification;
 
     @OneToOne(mappedBy = "etat")
+    @JsonIgnore
     private Opportunite opportunite;
 }

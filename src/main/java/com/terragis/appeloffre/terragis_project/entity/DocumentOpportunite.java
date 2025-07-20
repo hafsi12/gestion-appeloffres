@@ -1,5 +1,6 @@
 package com.terragis.appeloffre.terragis_project.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore; // Import this
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,11 +9,9 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DocumentOpportunite {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String title;
     private String description;
     private String fileType;
@@ -20,5 +19,6 @@ public class DocumentOpportunite {
 
     @ManyToOne
     @JoinColumn(name = "opportunite_id")
+    @JsonIgnore // Add this annotation to break the circular reference
     private Opportunite opportunite;
 }

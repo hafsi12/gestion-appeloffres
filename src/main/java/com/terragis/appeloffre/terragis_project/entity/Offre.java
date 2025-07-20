@@ -1,5 +1,6 @@
 package com.terragis.appeloffre.terragis_project.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import com.terragis.appeloffre.terragis_project.entity.Adjuge;
@@ -24,8 +25,8 @@ public class Offre {
     @Enumerated(EnumType.STRING)
     private Adjuge adjuge;
 
-    @OneToOne
-    @JoinColumn(name = "opportunite_id")
+    @OneToOne(mappedBy = "offre") // This maps back to the 'offre' field in Opportunite
+    @JsonIgnore // Add this to break the circular reference
     private Opportunite opportunite;
 
     @OneToMany(mappedBy = "offre", cascade = CascadeType.ALL)

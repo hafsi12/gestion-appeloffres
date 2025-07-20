@@ -1,38 +1,50 @@
 package com.terragis.appeloffre.terragis_project.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Opportunite {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idOpp;
-
     private String projectName;
     private String budget;
     private Date deadline;
     private String description;
-    private boolean GO;
 
     @ManyToOne
     @JoinColumn(name = "client_id")
     private MaitreOeuvrage client;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "etat_id")
     private EtatOpportunite etat;
 
-    @OneToMany(mappedBy = "opportunite", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "opportunite", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DocumentOpportunite> documents;
 
     @OneToOne(mappedBy = "opportunite", cascade = CascadeType.ALL)
     private Offre offre;
+
+    @Transient
+    private Long incomingClientId;
+
+    @JsonProperty("client")
+    public void setClientFromRequest(Object clientObject) {
+        if (clientObject instanceof Map) {
+            Map<?, ?> clientMap = (Map<?, ?>) clientObject;
+            if (clientMap.containsKey("idClient")) {
+                this.incomingClientId = ((Number) clientMap.get("idClient")).longValue();
+            }
+        }
+        this.client = null;
+    }
 }
