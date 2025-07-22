@@ -1,11 +1,10 @@
 package com.terragis.appeloffre.terragis_project.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore; // Import this
+import com.fasterxml.jackson.annotation.JsonIgnore; // Import this if needed for other relationships
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.util.List;
 
 @Entity
@@ -19,18 +18,18 @@ public class Offre {
     private double budget;
     private String detail;
     private boolean sent;
-
     @Enumerated(EnumType.STRING)
     private Adjuge adjuge;
 
-    @OneToOne(mappedBy = "offre") // Inverse side, mapped by the 'offre' field in Opportunite
-    @JsonIgnore // Prevents circular reference
+    // Offre is now the owning side of the OneToOne relationship with Opportunite
+    @OneToOne
+    @JoinColumn(name = "opportunite_id") // This will create the foreign key in the 'offre' table
     private Opportunite opportunite;
 
-    @OneToMany(mappedBy = "offre", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "offre", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DocumentOffre> documents;
 
-    @OneToMany(mappedBy = "offre", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "offre", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Tache> taches;
 
     @OneToOne(mappedBy = "offre", cascade = CascadeType.ALL)
@@ -43,4 +42,7 @@ public class Offre {
             inverseJoinColumns = @JoinColumn(name = "event_id")
     )
     private List<Event> events;
+
+    @Transient
+    private Long incomingOpportuniteId;
 }

@@ -1,5 +1,6 @@
 package com.terragis.appeloffre.terragis_project.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference; // Import this
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
@@ -31,8 +32,9 @@ public class Opportunite {
     @OneToMany(mappedBy = "opportunite", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DocumentOpportunite> documents;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "offre_id") // Owning side, foreign key in opportunite table
+    // Opportunite is now the inverse side of the OneToOne relationship with Offre
+    @OneToOne(mappedBy = "opportunite") // Mapped by the 'opportunite' field in Offre
+    @JsonBackReference // Prevents circular reference during JSON serialization
     private Offre offre;
 
     @Transient
