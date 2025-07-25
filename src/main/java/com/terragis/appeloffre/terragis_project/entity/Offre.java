@@ -1,5 +1,6 @@
 package com.terragis.appeloffre.terragis_project.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore; // Import this if needed for other relationships
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -33,6 +34,7 @@ public class Offre {
     private List<Tache> taches;
 
     @OneToOne(mappedBy = "offre", cascade = CascadeType.ALL)
+    @JsonBackReference
     private Contrat contrat;
 
     @ManyToMany

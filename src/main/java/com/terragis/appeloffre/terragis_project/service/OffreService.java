@@ -288,4 +288,7 @@ public class OffreService {
         }
         documentOffreRepository.delete(document);
     }
+    public List<Offre> getOffresGagneesSansContrat() {
+        return offreRepository.findOffresGagneesSansContrat();
+    }
 }

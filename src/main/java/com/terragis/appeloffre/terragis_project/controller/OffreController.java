@@ -175,4 +175,8 @@ public class OffreController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
     }
+    @GetMapping("/gagnees-sans-contrat")
+    public List<Offre> getOffresGagneesSansContrat() {
+        return offreService.getOffresGagneesSansContrat();
+    }
 }
