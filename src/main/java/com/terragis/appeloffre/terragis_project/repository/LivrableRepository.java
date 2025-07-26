@@ -19,4 +19,6 @@ public interface LivrableRepository extends JpaRepository<Livrable, Long> {
     
     @Query("SELECT l FROM Livrable l WHERE l.statutPaiement = ?1")
     List<Livrable> findByStatutPaiement(StatutPaiement statut);
+
+    void deleteByContratId(Long contratId);
 }

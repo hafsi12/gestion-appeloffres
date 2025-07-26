@@ -145,6 +145,18 @@ public class ContratService {
     public void deleteContrat(Long id) {
         Contrat contrat = contratRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Contrat non trouvé avec l'ID: " + id));
+
+        // Avant de supprimer le contrat, cassez la relation avec l'offre
+        if (contrat.getOffre() != null) {
+            Offre offre = contrat.getOffre();
+            offre.setContrat(null);
+            offreRepository.save(offre);
+        }
+
+        // Supprimez d'abord les livrables associés
+        livrableRepository.deleteByContratId(id);
+
+        // Puis supprimez le contrat
         contratRepository.delete(contrat);
     }
 
