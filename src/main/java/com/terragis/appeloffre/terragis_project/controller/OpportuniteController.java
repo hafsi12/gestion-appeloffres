@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders; // Import HttpHeaders
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType; // Import MediaType
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile; // Import MultipartFile
 import jakarta.servlet.http.HttpServletRequest; // Import HttpServletRequest
@@ -88,6 +89,13 @@ public class OpportuniteController {
             return ResponseEntity.notFound().build();
         }
     }
+    @PreAuthorize("hasRole('ADMIN') or hasRole('GESTION_OFFRES') or hasRole('GESTION_CLIENTS_OPPORTUNITES') or hasRole('GESTION_CONTRATS')")
+    @GetMapping("/go-disponibles")
+    public List<Opportunite> getOpportunitesGoDisponibles() {
+        return opportuniteService.getOpportunitesGoSansOffre();
+    }
+
+
 
     @PutMapping("/{id}/statut")
     public ResponseEntity<Opportunite> updateStatut(

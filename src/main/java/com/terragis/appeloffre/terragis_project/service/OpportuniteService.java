@@ -36,6 +36,10 @@ public class OpportuniteService {
         return opportuniteRepository.findAll();
     }
 
+    public List<Opportunite> getOpportunitesGoSansOffre() {
+        return opportuniteRepository.findOpportunitesGoDisponibles();
+    }
+
     public Optional<Opportunite> getOpportuniteById(Long id) {
         return opportuniteRepository.findById(id);
     }

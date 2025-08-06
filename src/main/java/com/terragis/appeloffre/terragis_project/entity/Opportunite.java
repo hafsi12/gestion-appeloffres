@@ -33,7 +33,7 @@ public class Opportunite {
     private List<DocumentOpportunite> documents;
 
     // Opportunite is now the inverse side of the OneToOne relationship with Offre
-    @OneToOne(mappedBy = "opportunite") // Mapped by the 'opportunite' field in Offre
+    @OneToOne(mappedBy = "opportunite" , cascade = CascadeType.ALL, orphanRemoval = true) // Mapped by the 'opportunite' field in Offre
     @JsonBackReference // Prevents circular reference during JSON serialization
     private Offre offre;
 

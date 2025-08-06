@@ -2,10 +2,22 @@ package com.terragis.appeloffre.terragis_project.repository;
 
 import com.terragis.appeloffre.terragis_project.entity.Opportunite;
 import com.terragis.appeloffre.terragis_project.entity.Offre;
+import com.terragis.appeloffre.terragis_project.entity.EtatOpportuniteEnum;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import java.util.List;
 import java.util.Optional;
 
 public interface OpportuniteRepository extends JpaRepository<Opportunite, Long> {
-    // Method to find an Opportunite by its associated Offre
+
+    // Trouver par offre
     Optional<Opportunite> findByOffre(Offre offre);
+
+
+
+    @Query("SELECT o FROM Opportunite o WHERE o.etat.statut = com.terragis.appeloffre.terragis_project.entity.EtatOpportuniteEnum.GO AND o.offre IS NULL")
+    List<Opportunite> findOpportunitesGoDisponibles();
+
+
 }
