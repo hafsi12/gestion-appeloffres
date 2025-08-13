@@ -106,6 +106,9 @@ public class WebSecurityConfig {
                                 // -------------------------
                                 .requestMatchers("/api/opportunites/go-disponibles")
                                 .hasAnyRole("ADMIN", "GESTION_OFFRES", "GESTION_CLIENTS_OPPORTUNITES", "GESTION_CONTRATS")
+                                // Opportunités archivées - lecture autorisée à certains rôles
+                                .requestMatchers(HttpMethod.GET, "/api/opportunites/archived")
+                                .hasAnyRole("ADMIN", "GESTION_OFFRES", "GESTION_CLIENTS_OPPORTUNITES", "GESTION_CONTRATS", "USER2", "USER3")
 
                                 .requestMatchers("/api/opportunites/**")
                                 .hasAnyRole("ADMIN", "GESTION_CLIENTS_OPPORTUNITES")

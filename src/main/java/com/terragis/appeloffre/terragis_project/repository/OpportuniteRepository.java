@@ -14,6 +14,12 @@ public interface OpportuniteRepository extends JpaRepository<Opportunite, Long> 
     // Trouver par offre
     Optional<Opportunite> findByOffre(Offre offre);
 
+    // Find non-archived opportunities
+    List<Opportunite> findByArchivedFalse();
+
+    // Find archived opportunities
+    List<Opportunite> findByArchivedTrue();
+
 
 
     @Query("SELECT o FROM Opportunite o WHERE o.etat.statut = com.terragis.appeloffre.terragis_project.entity.EtatOpportuniteEnum.GO AND o.offre IS NULL")

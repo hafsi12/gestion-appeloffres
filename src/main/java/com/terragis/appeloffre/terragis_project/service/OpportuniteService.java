@@ -33,7 +33,11 @@ public class OpportuniteService {
     }
 
     public List<Opportunite> getAllOpportunites() {
-        return opportuniteRepository.findAll();
+        return opportuniteRepository.findByArchivedFalse();
+    }
+
+    public List<Opportunite> getArchivedOpportunites() {
+        return opportuniteRepository.findByArchivedTrue();
     }
 
     public List<Opportunite> getOpportunitesGoSansOffre() {
@@ -199,12 +203,21 @@ public class OpportuniteService {
     public void deleteOpportunite(Long id) {
         Opportunite opportunite = opportuniteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Opportunité non trouvée"));
-        if (opportunite.getDocuments() != null) {
-            opportunite.getDocuments().forEach(doc -> {
-                fileStorageService.deleteFile(doc.getPath());
-            });
-        }
         opportuniteRepository.delete(opportunite);
+    }
+
+    public Opportunite archiveOpportunite(Long id) {
+        Opportunite opportunite = opportuniteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Opportunité non trouvée"));
+        opportunite.setArchived(true);
+        return opportuniteRepository.save(opportunite);
+    }
+
+    public Opportunite unarchiveOpportunite(Long id) {
+        Opportunite opportunite = opportuniteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Opportunité non trouvée"));
+        opportunite.setArchived(false);
+        return opportuniteRepository.save(opportunite);
     }
 
     public Opportunite updateOpportuniteStatus(Long id, EtatOpportuniteEnum statut, String justification) {

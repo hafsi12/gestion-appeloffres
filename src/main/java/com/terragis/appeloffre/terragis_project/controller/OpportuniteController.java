@@ -39,6 +39,11 @@ public class OpportuniteController {
         return opportuniteService.getAllOpportunites();
     }
 
+    @GetMapping("/archived")
+    public List<Opportunite> getArchivedOpportunites() {
+        return opportuniteService.getArchivedOpportunites();
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Opportunite> getOpportuniteById(@PathVariable Long id) {
         return opportuniteService.getOpportuniteById(id)
@@ -85,6 +90,26 @@ public class OpportuniteController {
         try {
             opportuniteService.deleteOpportunite(id);
             return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PutMapping("/{id}/archive")
+    public ResponseEntity<Opportunite> archiveOpportunite(@PathVariable Long id) {
+        try {
+            Opportunite archivedOpportunite = opportuniteService.archiveOpportunite(id);
+            return ResponseEntity.ok(archivedOpportunite);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PutMapping("/{id}/unarchive")
+    public ResponseEntity<Opportunite> unarchiveOpportunite(@PathVariable Long id) {
+        try {
+            Opportunite unarchivedOpportunite = opportuniteService.unarchiveOpportunite(id);
+            return ResponseEntity.ok(unarchivedOpportunite);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

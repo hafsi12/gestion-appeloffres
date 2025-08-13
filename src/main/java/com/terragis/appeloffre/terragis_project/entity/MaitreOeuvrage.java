@@ -13,11 +13,21 @@ public class MaitreOeuvrage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idClient;
+
+    // Random client code in format ab01, ab02, etc.
+    private String clientCode;
+
     private String name;
     private String webSite;
     private String address;
     private boolean archived;
     private String secteur;
+
+    // New fields for country, city, and landline
+    private String country;
+    private String city;
+    private String landline;
+
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Contact> contacts;
     @OneToMany(mappedBy = "client")

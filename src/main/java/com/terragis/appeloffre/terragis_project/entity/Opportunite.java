@@ -20,6 +20,7 @@ public class Opportunite {
     private String budget;
     private Date deadline;
     private String description;
+    private boolean archived = false;
 
     @ManyToOne
     @JoinColumn(name = "client_id")
