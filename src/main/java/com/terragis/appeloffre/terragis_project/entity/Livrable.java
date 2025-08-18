@@ -2,6 +2,8 @@ package com.terragis.appeloffre.terragis_project.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -19,7 +21,9 @@ public class Livrable {
     private StatutPaiement statutPaiement;
     private Double montant;
     private String fichierJoint; // chemin ou URL du fichier joint
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "contrat_id")
+    @JsonBackReference
     private Contrat contrat;
 }

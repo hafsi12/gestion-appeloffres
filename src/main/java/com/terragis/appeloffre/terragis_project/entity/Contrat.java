@@ -43,6 +43,6 @@ public class Contrat {
     private Long offreId; // Pour recevoir l'ID depuis le frontend
 
     @OneToMany(mappedBy = "contrat", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnore
+    @JsonManagedReference
     private java.util.List<Livrable> livrables;
 }

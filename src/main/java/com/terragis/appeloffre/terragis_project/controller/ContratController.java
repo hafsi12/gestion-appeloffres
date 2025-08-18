@@ -4,6 +4,7 @@ import com.terragis.appeloffre.terragis_project.entity.Contrat;
 import com.terragis.appeloffre.terragis_project.entity.Livrable;
 import com.terragis.appeloffre.terragis_project.service.ContratService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -17,19 +18,38 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/contrats")
 @RequiredArgsConstructor
+@Slf4j
 public class ContratController {
     private final ContratService contratService;
 
     @GetMapping
-    public ResponseEntity<List<Contrat>> getAllContrats() {
-        return ResponseEntity.ok(contratService.getAllContrats());
+    public ResponseEntity<?> getAllContrats() {
+        try {
+            List<Contrat> contrats = contratService.getAllContrats();
+            log.info("Récupération de {} contrats", contrats.size());
+            return ResponseEntity.ok(contrats);
+        } catch (Exception e) {
+            log.error("Erreur lors de la récupération des contrats", e);
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", "Erreur lors de la récupération des contrats", "message", e.getMessage()));
+        }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Contrat> getContratById(@PathVariable Long id) {
-        return contratService.getContratById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<?> getContratById(@PathVariable Long id) {
+        try {
+            var contratOptional = contratService.getContratById(id);
+            if (contratOptional.isPresent()) {
+                return ResponseEntity.ok(contratOptional.get());
+            } else {
+                return ResponseEntity.status(404)
+                        .body(Map.of("error", "Contrat non trouvé", "id", id));
+            }
+        } catch (Exception e) {
+            log.error("Erreur lors de la récupération du contrat {}", id, e);
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", "Erreur lors de la récupération du contrat", "message", e.getMessage()));
+        }
     }
 
     @PostMapping
@@ -55,12 +75,18 @@ public class ContratController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteContrat(@PathVariable Long id) {
+    public ResponseEntity<?> deleteContrat(@PathVariable Long id) {
         try {
+            if (!contratService.getContratById(id).isPresent()) {
+                return ResponseEntity.status(404)
+                        .body(Map.of("error", "Contrat non trouvé", "id", id));
+            }
             contratService.deleteContrat(id);
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.ok(Map.of("message", "Contrat supprimé avec succès", "id", id));
         } catch (Exception e) {
-            return ResponseEntity.notFound().build();
+            log.error("Erreur lors de la suppression du contrat {}", id, e);
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", "Erreur lors de la suppression", "message", e.getMessage()));
         }
     }
 
@@ -78,19 +104,19 @@ public class ContratController {
     }
 
     @PostMapping("/{id}/generate-pdf")
-    public ResponseEntity<Resource> generateContratPDF(@PathVariable Long id) {
+    public ResponseEntity<?> generateContratPDF(@PathVariable Long id) {
         try {
             Contrat contrat = contratService.getContratById(id)
                     .orElseThrow(() -> new RuntimeException("Contrat non trouvé"));
 
             Resource pdfResource = contratService.generateContratPDF(id);
 
-            String filename = String.format("contrat_%d_%s.html",
+            String filename = String.format("contrat_%d_%s.pdf",
                     id,
                     contrat.getNameClient().replaceAll("[^a-zA-Z0-9]", "_"));
 
             return ResponseEntity.ok()
-                    .contentType(MediaType.TEXT_HTML)
+                    .contentType(MediaType.APPLICATION_PDF)
                     .header(HttpHeaders.CONTENT_DISPOSITION,
                             "attachment; filename=\"" + filename + "\"")
                     .header(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate")
@@ -98,7 +124,9 @@ public class ContratController {
                     .header(HttpHeaders.EXPIRES, "0")
                     .body(pdfResource);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            log.error("Erreur lors de la génération du PDF pour le contrat {}", id, e);
+            return ResponseEntity.status(400)
+                    .body(Map.of("error", "Erreur lors de la génération du PDF", "message", e.getMessage()));
         }
     }
 
