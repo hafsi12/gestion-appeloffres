@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: terragis-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: terragis_db
+      POSTGRES_USER: terragis
+      POSTGRES_PASSWORD: terragis
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - terragis-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U terragis -d terragis_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Application Spring Boot
+  terragis-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: terragis-spring-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Configuration de la base de données
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/terragis_db
+      SPRING_DATASOURCE_USERNAME: terragis
+      SPRING_DATASOURCE_PASSWORD: terragis
+      
+      # Configuration JWT
+      APP_JWT_SECRET: TerragisSecureJWTKeyForProductionUse2024WithMinimum256BitsLength!@#$$%^&*()
+      APP_JWT_EXPIRATION_MS: 86400000
+      
+      # Profil Spring
+      SPRING_PROFILES_ACTIVE: prod
+      
+      # Configuration serveur
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+    volumes:
+      - app_uploads:/app/uploads
+      - app_files:/app/files
+    networks:
+      - terragis-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  postgres_data:
+    driver: local
+  app_uploads:
+    driver: local
+  app_files:
+    driver: local
+
+networks:
+  terragis-network:
+    driver: bridge
