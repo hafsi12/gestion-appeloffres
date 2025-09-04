@@ -5,6 +5,7 @@ import com.terragis.appeloffre.terragis_project.entity.Adjuge;
 import com.terragis.appeloffre.terragis_project.entity.DocumentOffre;
 import com.terragis.appeloffre.terragis_project.entity.Offre;
 import com.terragis.appeloffre.terragis_project.entity.Tache;
+import com.terragis.appeloffre.terragis_project.entity.TypeDossier;
 import com.terragis.appeloffre.terragis_project.service.FileStorageService;
 import com.terragis.appeloffre.terragis_project.service.OffreService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -105,16 +106,31 @@ public class OffreController {
         }
     }
 
-    // Endpoints for managing tasks within an offer
     @PostMapping("/{offreId}/taches")
-    public ResponseEntity<?> addTacheToOffre(@PathVariable Long offreId, @RequestBody Tache tache) {
+    public ResponseEntity<?> addTacheToOffre(
+            @PathVariable Long offreId,
+            @RequestBody Tache tache,
+            @RequestParam TypeDossier typeDossier) {
         try {
+            tache.setTypeDossier(typeDossier);
             Tache createdTache = offreService.addTacheToOffre(offreId, tache);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdTache);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{offreId}/taches/{typeDossier}")
+    public ResponseEntity<List<Tache>> getTachesByTypeDossier(
+            @PathVariable Long offreId,
+            @PathVariable TypeDossier typeDossier) {
+        try {
+            List<Tache> taches = offreService.getTachesByTypeDossier(offreId, typeDossier);
+            return ResponseEntity.ok(taches);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
 
@@ -128,14 +144,15 @@ public class OffreController {
         }
     }
 
-    // Endpoints for managing documents within an offer
     @PostMapping(value = "/{offreId}/documents", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> addDocumentToOffre(
             @PathVariable Long offreId,
             @RequestPart("document") String documentJson,
-            @RequestPart(value = "file", required = false) MultipartFile file) {
+            @RequestPart(value = "file", required = false) MultipartFile file,
+            @RequestParam TypeDossier typeDossier) {
         try {
             DocumentOffre document = objectMapper.readValue(documentJson, DocumentOffre.class);
+            document.setTypeDossier(typeDossier);
             DocumentOffre createdDocument = offreService.addDocumentToOffre(offreId, document, file);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdDocument);
         } catch (RuntimeException e) {
@@ -147,6 +164,18 @@ public class OffreController {
         }
     }
 
+    @GetMapping("/{offreId}/documents/{typeDossier}")
+    public ResponseEntity<List<DocumentOffre>> getDocumentsByTypeDossier(
+            @PathVariable Long offreId,
+            @PathVariable TypeDossier typeDossier) {
+        try {
+            List<DocumentOffre> documents = offreService.getDocumentsByTypeDossier(offreId, typeDossier);
+            return ResponseEntity.ok(documents);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
+
     @DeleteMapping("/{offreId}/documents/{documentId}")
     public ResponseEntity<Void> deleteDocumentFromOffre(@PathVariable Long offreId, @PathVariable Long documentId) {
         try {
@@ -155,6 +184,11 @@ public class OffreController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
+    }
+
+    @GetMapping("/types-dossiers")
+    public ResponseEntity<TypeDossier[]> getTypesDossiers() {
+        return ResponseEntity.ok(TypeDossier.values());
     }
 
     // Endpoint to download files (reusing FileStorageService)
@@ -175,6 +209,7 @@ public class OffreController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
     }
+
     @GetMapping("/gagnees-sans-contrat")
     public List<Offre> getOffresGagneesSansContrat() {
         return offreService.getOffresGagneesSansContrat();

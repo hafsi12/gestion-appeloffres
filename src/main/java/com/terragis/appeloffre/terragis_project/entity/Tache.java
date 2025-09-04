@@ -3,6 +3,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -11,11 +12,17 @@ public class Tache {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String titre;
     private String detail;
     private LocalDate deadline;
     private String assignedPerson;
-    private boolean checked  ;
+    private boolean checked;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type_dossier")
+    private TypeDossier typeDossier;
+
     @ManyToOne
     @JoinColumn(name = "offre_id")
     @JsonIgnore

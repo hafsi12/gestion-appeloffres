@@ -19,7 +19,10 @@ public class Opportunite {
     private String projectName;
     private String budget;
     private Date deadline;
+
+    @Column(columnDefinition = "TEXT")
     private String description;
+
     private boolean archived = false;
 
     @ManyToOne

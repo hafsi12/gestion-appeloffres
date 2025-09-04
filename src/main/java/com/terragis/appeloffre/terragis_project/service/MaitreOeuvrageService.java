@@ -5,15 +5,11 @@ import com.terragis.appeloffre.terragis_project.repository.MaitreOeuvrageReposit
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @RequiredArgsConstructor
 public class MaitreOeuvrageService {
     private final MaitreOeuvrageRepository maitreOeuvrageRepository;
-    private static final AtomicInteger counter = new AtomicInteger(1);
-    private static final Random random = new Random();
 
     public List<MaitreOeuvrage> getAllClients(boolean archived) {
         return maitreOeuvrageRepository.findByArchived(archived);
@@ -27,32 +23,52 @@ public class MaitreOeuvrageService {
     public MaitreOeuvrage createClient(MaitreOeuvrage client) {
         client.setArchived(false);
 
-        // Generate a random client code if not already set
         if (client.getClientCode() == null || client.getClientCode().isEmpty()) {
-            client.setClientCode(generateClientCode());
+            client.setClientCode(generateAlphabeticalClientCode());
         }
 
         return maitreOeuvrageRepository.save(client);
     }
 
     /**
-     * Generates a random client code in the format "ab01", "ab02", etc.
-     * Uses a combination of random letters and sequential numbers.
-     * @return A unique client code
+     * Generates an alphabetical sequential client code in the format "a01", "a02", ..., "a99", "b01", "b02", etc.
+     * @return A unique alphabetical client code
      */
-    private String generateClientCode() {
-        // Generate two random lowercase letters
-        char firstLetter = (char) (random.nextInt(26) + 'a');
-        char secondLetter = (char) (random.nextInt(26) + 'a');
+    private String generateAlphabeticalClientCode() {
+        // Find the highest existing code
+        List<MaitreOeuvrage> allClients = maitreOeuvrageRepository.findAll();
 
-        // Get sequential number and format to 2 digits
-        int sequentialNum = counter.getAndIncrement();
+        char maxLetter = 'a';
+        int maxNumber = 0;
 
-        // Format to ensure we have 2 digits (01, 02, etc.)
-        String numberPart = String.format("%02d", sequentialNum % 100);
+        for (MaitreOeuvrage existingClient : allClients) {
+            String existingCode = existingClient.getClientCode();
+            if (existingCode != null && existingCode.length() == 3 &&
+                    Character.isLetter(existingCode.charAt(0)) &&
+                    Character.isDigit(existingCode.charAt(1)) &&
+                    Character.isDigit(existingCode.charAt(2))) {
 
-        // Combine to format "ab01"
-        return "" + firstLetter + secondLetter + numberPart;
+                char letter = existingCode.charAt(0);
+                int number = Integer.parseInt(existingCode.substring(1));
+
+                if (letter > maxLetter || (letter == maxLetter && number > maxNumber)) {
+                    maxLetter = letter;
+                    maxNumber = number;
+                }
+            }
+        }
+
+        // Generate next code
+        if (maxNumber >= 99) {
+            // Move to next letter and reset to 01
+            maxLetter = (char) (maxLetter + 1);
+            maxNumber = 1;
+        } else {
+            maxNumber++;
+        }
+
+        // Format as letter + 2-digit number (a01, a02, etc.)
+        return String.format("%c%02d", maxLetter, maxNumber);
     }
 
     public MaitreOeuvrage updateClient(Long id, MaitreOeuvrage clientDetails) {

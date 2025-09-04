@@ -44,7 +44,7 @@ public class OffreService {
         if (offre.getIncomingOpportuniteId() != null) {
             opportunite = opportuniteRepository.findById(offre.getIncomingOpportuniteId())
                     .orElseThrow(() -> new RuntimeException("Opportunité non trouvée avec l'ID: " + offre.getIncomingOpportuniteId()));
-            offre.setOpportunite(opportunite); // Set the Opportunite object on the Offre
+            offre.setOpportunite(opportunite);
         }
 
         if (offre.getAdjuge() == null) {
@@ -55,6 +55,10 @@ public class OffreService {
         if (offre.getDocuments() != null && !offre.getDocuments().isEmpty()) {
             List<DocumentOffre> processedDocuments = new ArrayList<>();
             for (DocumentOffre doc : offre.getDocuments()) {
+                if (doc.getTypeDossier() == null) {
+                    doc.setTypeDossier(TypeDossier.TECHNIQUE); // Valeur par défaut
+                }
+
                 if (doc.getCheminFichier() != null && !doc.getCheminFichier().isEmpty()) {
                     Optional<MultipartFile> matchingFile = files != null ? files.stream()
                             .filter(file -> file.getOriginalFilename() != null && file.getOriginalFilename().equals(doc.getCheminFichier()))
@@ -72,21 +76,25 @@ public class OffreService {
 
         // Handle tasks
         if (offre.getTaches() != null) {
-            offre.getTaches().forEach(tache -> tache.setOffre(offre));
+            offre.getTaches().forEach(tache -> {
+                if (tache.getTypeDossier() == null) {
+                    tache.setTypeDossier(TypeDossier.TECHNIQUE); // Valeur par défaut
+                }
+                tache.setOffre(offre);
+            });
         }
 
         Offre savedOffre = offreRepository.save(offre);
 
         // Maintain bidirectional consistency for Opportunite
         if (opportunite != null) {
-            // If the opportunite was previously linked to another offre, break that link
             Opportunite oldOpportuniteLinkedToThisOffre = opportuniteRepository.findByOffre(savedOffre).orElse(null);
             if (oldOpportuniteLinkedToThisOffre != null && !oldOpportuniteLinkedToThisOffre.getIdOpp().equals(opportunite.getIdOpp())) {
                 oldOpportuniteLinkedToThisOffre.setOffre(null);
                 opportuniteRepository.save(oldOpportuniteLinkedToThisOffre);
             }
             opportunite.setOffre(savedOffre);
-            opportuniteRepository.save(opportunite); // Save Opportunite to update its 'offre' field
+            opportuniteRepository.save(opportunite);
         }
 
         return savedOffre;
@@ -103,9 +111,9 @@ public class OffreService {
         if (offreDetails.getIncomingOpportuniteId() != null) {
             newOpportunite = opportuniteRepository.findById(offreDetails.getIncomingOpportuniteId())
                     .orElseThrow(() -> new RuntimeException("Nouvelle Opportunité non trouvée avec l'ID: " + offreDetails.getIncomingOpportuniteId()));
-            existingOffre.setOpportunite(newOpportunite); // Set the new Opportunite on the Offre
+            existingOffre.setOpportunite(newOpportunite);
         } else {
-            existingOffre.setOpportunite(null); // Disassociate if incomingOpportuniteId is null
+            existingOffre.setOpportunite(null);
         }
 
         existingOffre.setBudget(offreDetails.getBudget());
@@ -131,6 +139,8 @@ public class OffreService {
                 newDoc.setNamefile(incomingDoc.getNamefile());
                 newDoc.setDescription(incomingDoc.getDescription());
                 newDoc.setType(incomingDoc.getType());
+                newDoc.setTypeDossier(incomingDoc.getTypeDossier() != null ? incomingDoc.getTypeDossier() : TypeDossier.TECHNIQUE);
+
                 if (incomingDoc.getCheminFichier() != null && !incomingDoc.getCheminFichier().isEmpty()) {
                     Optional<MultipartFile> matchingFile = files != null ? files.stream()
                             .filter(file -> file.getOriginalFilename() != null && file.getOriginalFilename().equals(incomingDoc.getCheminFichier()))
@@ -153,6 +163,8 @@ public class OffreService {
                             existingDoc.setNamefile(incomingDoc.getNamefile());
                             existingDoc.setDescription(incomingDoc.getDescription());
                             existingDoc.setType(incomingDoc.getType());
+                            existingDoc.setTypeDossier(incomingDoc.getTypeDossier());
+
                             if (incomingDoc.getCheminFichier() != null && !incomingDoc.getCheminFichier().isEmpty()) {
                                 Optional<MultipartFile> matchingFile = files != null ? files.stream()
                                         .filter(file -> file.getOriginalFilename() != null && file.getOriginalFilename().equals(incomingDoc.getCheminFichier()))
@@ -184,6 +196,7 @@ public class OffreService {
                 newTache.setDeadline(incomingTache.getDeadline());
                 newTache.setAssignedPerson(incomingTache.getAssignedPerson());
                 newTache.setChecked(incomingTache.isChecked());
+                newTache.setTypeDossier(incomingTache.getTypeDossier() != null ? incomingTache.getTypeDossier() : TypeDossier.TECHNIQUE);
                 newTache.setOffre(existingOffre);
                 existingOffre.getTaches().add(newTache);
             } else {
@@ -196,6 +209,7 @@ public class OffreService {
                             existingTache.setDeadline(incomingTache.getDeadline());
                             existingTache.setAssignedPerson(incomingTache.getAssignedPerson());
                             existingTache.setChecked(incomingTache.isChecked());
+                            existingTache.setTypeDossier(incomingTache.getTypeDossier());
                         });
             }
         }
@@ -204,13 +218,12 @@ public class OffreService {
 
         // Maintain bidirectional consistency for Opportunite
         if (oldOpportunite != null && (newOpportunite == null || !oldOpportunite.getIdOpp().equals(newOpportunite.getIdOpp()))) {
-            // If the old opportunite is no longer linked or linked to a different one, break its link
             oldOpportunite.setOffre(null);
             opportuniteRepository.save(oldOpportunite);
         }
         if (newOpportunite != null) {
             newOpportunite.setOffre(updatedOffre);
-            opportuniteRepository.save(newOpportunite); // Save new Opportunite to update its 'offre' field
+            opportuniteRepository.save(newOpportunite);
         }
 
         return updatedOffre;
@@ -220,14 +233,12 @@ public class OffreService {
         Offre offre = offreRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Offre non trouvée avec l'ID: " + id));
 
-        // Before deleting the Offre, ensure the associated Opportunite's 'offre' field is nulled out
         if (offre.getOpportunite() != null) {
             Opportunite associatedOpportunite = offre.getOpportunite();
             associatedOpportunite.setOffre(null);
             opportuniteRepository.save(associatedOpportunite);
         }
 
-        // Delete associated files before deleting the offer
         if (offre.getDocuments() != null) {
             offre.getDocuments().forEach(doc -> {
                 if (doc.getCheminFichier() != null && !doc.getCheminFichier().isEmpty()) {
@@ -245,10 +256,29 @@ public class OffreService {
         return offreRepository.save(offre);
     }
 
+    public List<DocumentOffre> getDocumentsByTypeDossier(Long offreId, TypeDossier typeDossier) {
+        Offre offre = offreRepository.findById(offreId)
+                .orElseThrow(() -> new RuntimeException("Offre non trouvée avec l'ID: " + offreId));
+        return offre.getDocuments().stream()
+                .filter(doc -> doc.getTypeDossier() == typeDossier)
+                .collect(Collectors.toList());
+    }
+
+    public List<Tache> getTachesByTypeDossier(Long offreId, TypeDossier typeDossier) {
+        Offre offre = offreRepository.findById(offreId)
+                .orElseThrow(() -> new RuntimeException("Offre non trouvée avec l'ID: " + offreId));
+        return offre.getTaches().stream()
+                .filter(tache -> tache.getTypeDossier() == typeDossier)
+                .collect(Collectors.toList());
+    }
+
     // Methods to add/remove tasks and documents individually (for detail view editing)
     public Tache addTacheToOffre(Long offreId, Tache tache) {
         Offre offre = offreRepository.findById(offreId)
                 .orElseThrow(() -> new RuntimeException("Offre non trouvée avec l'ID: " + offreId));
+        if (tache.getTypeDossier() == null) {
+            tache.setTypeDossier(TypeDossier.TECHNIQUE);
+        }
         tache.setOffre(offre);
         return tacheRepository.save(tache);
     }
@@ -267,6 +297,9 @@ public class OffreService {
     public DocumentOffre addDocumentToOffre(Long offreId, DocumentOffre document, MultipartFile file) {
         Offre offre = offreRepository.findById(offreId)
                 .orElseThrow(() -> new RuntimeException("Offre non trouvée avec l'ID: " + offreId));
+        if (document.getTypeDossier() == null) {
+            document.setTypeDossier(TypeDossier.TECHNIQUE);
+        }
         if (file != null) {
             String storedFileName = fileStorageService.storeFile(file);
             document.setCheminFichier(storedFileName);
@@ -288,6 +321,7 @@ public class OffreService {
         }
         documentOffreRepository.delete(document);
     }
+
     public List<Offre> getOffresGagneesSansContrat() {
         return offreRepository.findOffresGagneesSansContrat();
     }
